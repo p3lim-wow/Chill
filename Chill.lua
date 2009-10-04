@@ -66,6 +66,9 @@ function addon:StartCooldown(name, start, duration)
 		slot.icon:SetTexture(GetSpellTexture(name))
 		slot:Show()
 	end
+
+	self.active = self.active + 1
+	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
 end
 
 -- this function acts very "jumpy", need to fix it
@@ -78,6 +81,8 @@ function addon:StopCooldown(old)
 		end
 	end
 
+	self.active = self.active - 1
+	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
 	old.name, old.duration = nil, nil
 	old:Hide()
 end
@@ -100,8 +105,9 @@ end
 
 addon:RegisterEvent('PLAYER_LOGIN')
 addon:SetScript('OnEvent', function(self, event)
+	self.active = 0
 	self:SetHeight(24)
-	self:SetWidth(#spells * (self:GetHeight() + 3))
+	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
 	self:SetPoint('BOTTOM', 0, 90)
 	self.frames = {}
 
