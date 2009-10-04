@@ -1,8 +1,8 @@
 local spells = {
-	'Dash',
-	GetSpellInfo(50213), -- tiger's fury
-	'Berserk',
-	'Rebirth',
+	33357, -- Druid: Dash
+	50213, -- Druid: Tiger's Fury
+	50334, -- Druid: Berserk
+	48477, -- Druid: Rebirth
 }
 
 -- MAJIK!
@@ -105,8 +105,16 @@ addon:SetScript('OnEvent', function(self, event)
 	self:SetPoint('BOTTOM', 0, 90)
 	self.frames = {}
 
+	-- Repack the spells
+	local knownSpells = {}
+	for index, id in next, spells do
+		if(IsSpellKnown(id)) then
+			knownSpells[index] = GetSpellInfo(id)
+		end
+	end
+
 	local index = 1
-	for k in next, spells do
+	for k in next, knownSpells do
 		local frame = self:CreateCooldown()
 		frame:SetPoint('BOTTOMLEFT', self, 'BOTTOMLEFT', (index - 1) * (self:GetHeight() + 3), 0)
 		frame.index = index
