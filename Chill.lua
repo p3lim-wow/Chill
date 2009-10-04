@@ -5,6 +5,10 @@ local spells = {
 	48477, -- Druid: Rebirth
 }
 
+local items = {
+	45158, -- Trinket: Heart of Iron
+}
+
 -- MAJIK!
 local addon = CreateFrame('Frame', 'Chill', UIParent)
 
@@ -49,7 +53,7 @@ function addon:CreateCooldown()
 	return frame
 end
 
-function addon:StartCooldown(name, start, duration)
+function addon:StartCooldown(name, texture, start, duration)
 	local index, slot = 20
 	for frame in next, self.frames do
 		if(frame.name and frame.name == name) then
@@ -63,7 +67,7 @@ function addon:StartCooldown(name, start, duration)
 	if(slot) then
 		slot.name = name
 		slot.duration = start - GetTime() + duration
-		slot.icon:SetTexture(GetSpellTexture(name))
+		slot.icon:SetTexture(texture)
 		slot:Show()
 	end
 
@@ -87,18 +91,28 @@ function addon:StopCooldown(old)
 	old:Hide()
 end
 
-function addon:CheckCooldown()
+function addon:SPELL_UPDATE_COOLDOWN()
 	for index, name in next, spells do
 		local start, duration, enabled = GetSpellCooldown(name)
 
 		if(enabled == 1 and duration > 1.5) then
-			self:StartCooldown(name, start, duration)
+			self:StartCooldown(name, GetSpellTexture(name), start, duration)
 		elseif(enabled == 1) then
 			for frame in next, self.frames do
 				if(frame.name and frame.name == name) then
 					self:StopCooldown(frame)
 				end
 			end
+		end
+	end
+end
+
+function addon:BAG_UPDATE_COOLDOWN()
+	for index, item in next, items do
+		local start, duration, enabled = GetItemCooldown(item)
+		if(enabled == 1) then
+			local name, _, _, _, _, _, _, _, _, texture = GetItemInfo(item)
+			self:StartCooldown(name, texture, start, duration)
 		end
 	end
 end
@@ -121,16 +135,33 @@ addon:SetScript('OnEvent', function(self, event)
 	spells = knownSpells
 
 	local index = 1
-	for k, v in next, spells do
-		local frame = self:CreateCooldown()
-		frame:SetPoint('BOTTOMLEFT', self, 'BOTTOMLEFT', (index - 1) * (self:GetHeight() + 3), 0)
-		frame.index = index
+	if(#spells > 0) then
+		for k in next, spells do
+			local frame = self:CreateCooldown()
+			frame:SetPoint('BOTTOMLEFT', self, (index - 1) * (self:GetHeight() + 3), 0)
+			frame.index = index
 
-		self.frames[frame] = true
-		index = index + 1
+			self.frames[frame] = true
+			index = index + 1
+		end
+
+		self:RegisterEvent('SPELL_UPDATE_COOLDOWN')
+		self:SPELL_UPDATE_COOLDOWN()
 	end
 
-	self:RegisterEvent('SPELL_UPDATE_COOLDOWN')
-	self:SetScript('OnEvent', self.CheckCooldown)
-	self:CheckCooldown()
+	if(#items > 0) then
+		for k in next, items do
+			local frame = self:CreateCooldown()
+			frame:SetPoint('BOTTOMLEFT', self, (index - 1) * (self:GetHeight() + 3), 0)
+			frame.index = index
+
+			self.frames[frame] = true
+			index = index + 1
+		end
+
+		self:RegisterEvent('BAG_UPDATE_COOLDOWN')
+		self:BAG_UPDATE_COOLDOWN()
+	end
+
+	self:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
 end)
