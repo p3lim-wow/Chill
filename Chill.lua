@@ -112,9 +112,10 @@ addon:SetScript('OnEvent', function(self, event)
 			knownSpells[index] = GetSpellInfo(id)
 		end
 	end
+	spells = knownSpells
 
 	local index = 1
-	for k in next, knownSpells do
+	for k, v in next, spells do
 		local frame = self:CreateCooldown()
 		frame:SetPoint('BOTTOMLEFT', self, 'BOTTOMLEFT', (index - 1) * (self:GetHeight() + 3), 0)
 		frame.index = index
