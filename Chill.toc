@@ -2,6 +2,6 @@
 ## Author: p3lim
 ## Version: Alpha
 ## Title: Chill
-## Notes: Cooldown timer
+## Notes: Simple Cooldown timer
 
 Chill.lua
