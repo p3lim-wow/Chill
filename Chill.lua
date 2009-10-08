@@ -56,7 +56,7 @@ function addon:CreateCooldown()
 
 	frame.icon = frame:CreateTexture(nil, 'ARTWORK')
 	frame.icon:SetAllPoints(frame)
-	frame.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+	frame.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
 	frame.text = frame:CreateFontString(nil, 'OVERLAY', 'NumberFontNormal')
 	frame.text:SetPoint('CENTER')
