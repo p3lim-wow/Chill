@@ -53,24 +53,26 @@ local function onUpdate(frame, elapsed)
 end
 
 function addon:CreateFrames()
-	self.frames, self.index = table.wipe(self.frames), 1
-
 	for k in next, ChillDB.spell do
-		local frame = self:CreateCooldown()
-		frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
-		frame.index = self.index
+		if(not self.frames['spell:'..k]) then
+			local frame = self:CreateCooldown()
+			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
+			frame.index = self.index
 
-		self.frames[frame] = true
-		self.index = self.index + 1
+			self.frames['spell:'..k] = frame
+			self.index = self.index + 1
+		end
 	end
 
 	for k in next, ChillDB.item do
-		local frame = self:CreateCooldown()
-		frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
-		frame.index = self.index
+		if(not self.frames['item:'..k]) then
+			local frame = self:CreateCooldown()
+			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
+			frame.index = self.index
 
-		self.frames[frame] = true
-		self.index = self.index + 1
+			self.frames['item:'..k] = frame
+			self.index = self.index + 1
+		end
 	end
 end
 
@@ -95,7 +97,7 @@ end
 
 function addon:StartCooldown(name, texture, start, duration)
 	local index, slot = 20
-	for frame in next, self.frames do
+	for id, frame in next, self.frames do
 		if(frame.name and frame.name == name) then
 			slot = nil
 			return
@@ -116,7 +118,7 @@ function addon:StartCooldown(name, texture, start, duration)
 end
 
 function addon:StopCooldown(old)
-	for frame in next, self.frames do
+	for id, frame in next, self.frames do
 		if((frame.index > old.index) and frame.duration) then
 			old.name, old.duration = frame.name, frame.duration
 			old.icon:SetTexture(frame.icon:GetTexture())
@@ -137,7 +139,7 @@ function addon:SPELL_UPDATE_COOLDOWN()
 		if(enabled == 1 and duration > 1.5) then
 			self:StartCooldown(name, GetSpellTexture(name), start, duration)
 		elseif(enabled == 1) then
-			for frame in next, self.frames do
+			for id, frame in next, self.frames do
 				if(frame.name and frame.name == name) then
 					self:StopCooldown(frame)
 				end
@@ -164,6 +166,7 @@ addon:SetScript('OnEvent', function(self, event, name)
 	SLASH_Chill1 = '/chill'
 	SlashCmdList[name] = slashCommand
 
+	self.index = 1
 	self.active = 0
 	self.frames = {}
 	self:SetHeight(24)
