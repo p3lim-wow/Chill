@@ -9,25 +9,32 @@
 
 --]]
 
-local spells = {
-	33357, -- Druid: Dash
-	50213, -- Druid: Tiger's Fury
-	50334, -- Druid: Berserk
-	48477, -- Druid: Rebirth
-}
-
-local items = {
-	45158, -- Trinket: Heart of Iron
-}
-
--- MAJIK!
 local addon = CreateFrame('Frame', 'Chill', UIParent)
-
 local marke = [=[Interface\AddOns\Chill\marke.ttf]=]
 local backdrop = {
 	bgFile = [=[Interface\ChatFrame\ChatFrameBackground]=],
 	insets = {top = -1, bottom = -1, left = -1, right = -1}
 }
+
+local function slashCommand(str)
+	local type, id, _ , name = string.match(str, '|H(%w+):(%w+)(.*)|h%[(.+)%]|h') -- todo: clean up
+
+	if(str and type) then
+		id = tonumber(id)
+
+		if(not ChillDB[type][id]) then
+			table.insert(ChillDB[type], id, name)
+			print('|cffff8080Chill:|r Added', str, 'to the list')
+		else
+			ChillDB[type][id] = nil
+			print('|cffff8080Chill:|r Removed', str, 'from the list')
+		end
+
+		addon:CreateFrames()
+	else
+		print('|cffff8080Chill:|r Please link a spell/item to watch!')
+	end
+end
 
 local function onUpdate(frame, elapsed)
 	frame.duration = frame.duration - elapsed
@@ -42,6 +49,28 @@ local function onUpdate(frame, elapsed)
 		frame.text:SetFormattedText('|cffff0000%.1f|r', frame.duration)
 	else
 		frame.text:SetText()
+	end
+end
+
+function addon:CreateFrames()
+	self.frames, self.index = table.wipe(self.frames), 1
+
+	for k in next, ChillDB.spell do
+		local frame = self:CreateCooldown()
+		frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
+		frame.index = self.index
+
+		self.frames[frame] = true
+		self.index = self.index + 1
+	end
+
+	for k in next, ChillDB.item do
+		local frame = self:CreateCooldown()
+		frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
+		frame.index = self.index
+
+		self.frames[frame] = true
+		self.index = self.index + 1
 	end
 end
 
@@ -86,7 +115,6 @@ function addon:StartCooldown(name, texture, start, duration)
 	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
 end
 
--- this function acts very "jumpy", need to fix it
 function addon:StopCooldown(old)
 	for frame in next, self.frames do
 		if((frame.index > old.index) and frame.duration) then
@@ -103,7 +131,7 @@ function addon:StopCooldown(old)
 end
 
 function addon:SPELL_UPDATE_COOLDOWN()
-	for index, name in next, spells do
+	for id, name in next, ChillDB.spell do
 		local start, duration, enabled = GetSpellCooldown(name)
 
 		if(enabled == 1 and duration > 1.5) then
@@ -119,60 +147,34 @@ function addon:SPELL_UPDATE_COOLDOWN()
 end
 
 function addon:BAG_UPDATE_COOLDOWN()
-	for index, item in next, items do
-		local start, duration, enabled = GetItemCooldown(item)
+	for id, name in next, ChillDB.item do
+		local start, duration, enabled = GetItemCooldown(id)
+
 		if(enabled == 1) then
-			local name, _, _, _, _, _, _, _, _, texture = GetItemInfo(item)
-			self:StartCooldown(name, texture, start, duration)
+			self:StartCooldown(name, GetItemIcon(id), start, duration)
 		end
 	end
 end
 
-addon:RegisterEvent('PLAYER_LOGIN')
-addon:SetScript('OnEvent', function(self, event)
+addon:RegisterEvent('ADDON_LOADED')
+addon:SetScript('OnEvent', function(self, event, name)
+	if(name ~= self:GetName()) then return end
+	ChillDB = ChillDB or {spell = {}, item = {}}
+
+	SLASH_Chill1 = '/chill'
+	SlashCmdList[name] = slashCommand
+
 	self.active = 0
+	self.frames = {}
 	self:SetHeight(24)
 	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
 	self:SetPoint('BOTTOM', 0, 90)
-	self.frames = {}
 
-	-- Repack the spells
-	local knownSpells = {}
-	for index, id in next, spells do
-		if(IsSpellKnown(id)) then
-			knownSpells[index] = GetSpellInfo(id)
-		end
-	end
-	spells = knownSpells
-
-	local index = 1
-	if(#spells > 0) then
-		for k in next, spells do
-			local frame = self:CreateCooldown()
-			frame:SetPoint('BOTTOMLEFT', self, (index - 1) * (self:GetHeight() + 3), 0)
-			frame.index = index
-
-			self.frames[frame] = true
-			index = index + 1
-		end
-
-		self:RegisterEvent('SPELL_UPDATE_COOLDOWN')
-		self:SPELL_UPDATE_COOLDOWN()
-	end
-
-	if(#items > 0) then
-		for k in next, items do
-			local frame = self:CreateCooldown()
-			frame:SetPoint('BOTTOMLEFT', self, (index - 1) * (self:GetHeight() + 3), 0)
-			frame.index = index
-
-			self.frames[frame] = true
-			index = index + 1
-		end
-
-		self:RegisterEvent('BAG_UPDATE_COOLDOWN')
-		self:BAG_UPDATE_COOLDOWN()
-	end
-
+	self:CreateFrames()
+	self:BAG_UPDATE_COOLDOWN()
+	self:SPELL_UPDATE_COOLDOWN()
+	self:RegisterEvent('SPELL_UPDATE_COOLDOWN')
+	self:RegisterEvent('BAG_UPDATE_COOLDOWN')
+	self:UnregisterEvent(event)
 	self:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
 end)

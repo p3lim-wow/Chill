@@ -3,5 +3,6 @@
 ## Version: Alpha
 ## Title: Chill
 ## Notes: Simple Cooldown timer
+## SavedVariablesPerCharacter: ChillDB
 
 Chill.lua
