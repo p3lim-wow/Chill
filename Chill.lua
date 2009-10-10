@@ -23,7 +23,7 @@ local function slashCommand(str)
 		id = tonumber(id)
 
 		if(not ChillDB[type][id]) then
-			table.insert(ChillDB[type], id, name)
+			ChillDB[type][id] = name
 			print('|cffff8080Chill:|r Added', str, 'to the list')
 		else
 			ChillDB[type][id] = nil
