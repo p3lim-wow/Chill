@@ -106,12 +106,10 @@ function addon:StartCooldown(name, texture, start, duration)
 		end
 	end
 
-	if(slot) then
-		slot.name = name
-		slot.duration = start - GetTime() + duration
-		slot.icon:SetTexture(texture)
-		slot:Show()
-	end
+	slot.name = name
+	slot.duration = start - GetTime() + duration
+	slot.icon:SetTexture(texture)
+	slot:Show()
 
 	self.active = self.active + 1
 	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
