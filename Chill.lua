@@ -10,7 +10,6 @@
 --]]
 
 local addon = CreateFrame('Frame', 'Chill', UIParent)
-local marke = [=[Interface\AddOns\Chill\marke.ttf]=]
 local backdrop = {
 	bgFile = [=[Interface\ChatFrame\ChatFrameBackground]=],
 	insets = {top = -1, bottom = -1, left = -1, right = -1}
