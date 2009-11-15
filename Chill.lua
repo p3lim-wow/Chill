@@ -52,24 +52,24 @@ local function onUpdate(frame, elapsed)
 end
 
 function addon:CreateFrames()
-	for k in next, ChillDB.spell do
-		if(not self.frames['spell:'..k]) then
+	for id in next, ChillDB.spell do
+		if(not self.frames['spell:'..id]) then
 			local frame = self:CreateCooldown()
 			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
 			frame.index = self.index
 
-			self.frames['spell:'..k] = frame
+			self.frames['spell:'..id] = frame
 			self.index = self.index + 1
 		end
 	end
 
-	for k in next, ChillDB.item do
-		if(not self.frames['item:'..k]) then
+	for id in next, ChillDB.item do
+		if(not self.frames['item:'..id]) then
 			local frame = self:CreateCooldown()
 			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
 			frame.index = self.index
 
-			self.frames['item:'..k] = frame
+			self.frames['item:'..id] = frame
 			self.index = self.index + 1
 		end
 	end
