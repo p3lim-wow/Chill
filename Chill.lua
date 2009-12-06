@@ -149,7 +149,7 @@ function addon:BAG_UPDATE_COOLDOWN()
 	for id, name in next, ChillDB.item do
 		local start, duration, enabled = GetItemCooldown(id)
 
-		if(enabled == 1) then
+		if(enabled == 1 and duration > 30) then
 			self:StartCooldown(name, GetItemIcon(id), start, duration)
 		end
 	end
