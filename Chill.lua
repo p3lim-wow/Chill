@@ -55,7 +55,7 @@ function addon:CreateFrames()
 	for id in next, ChillDB.spell do
 		if(not self.frames['spell:'..id]) then
 			local frame = self:CreateCooldown()
-			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
+			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 6), 0)
 			frame.index = self.index
 
 			self.frames['spell:'..id] = frame
@@ -66,7 +66,7 @@ function addon:CreateFrames()
 	for id in next, ChillDB.item do
 		if(not self.frames['item:'..id]) then
 			local frame = self:CreateCooldown()
-			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 3), 0)
+			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 6), 0)
 			frame.index = self.index
 
 			self.frames['item:'..id] = frame
@@ -111,7 +111,7 @@ function addon:StartCooldown(name, texture, start, duration)
 	slot:Show()
 
 	self.active = self.active + 1
-	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
+	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 6)) - 3) or self:GetHeight())
 end
 
 function addon:StopCooldown(old)
@@ -124,7 +124,7 @@ function addon:StopCooldown(old)
 	end
 
 	self.active = self.active - 1
-	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
+	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 6)) - 3) or self:GetHeight())
 	old.name, old.duration = nil, nil
 	old:Hide()
 end
@@ -167,7 +167,7 @@ addon:SetScript('OnEvent', function(self, event, name)
 	self.active = 0
 	self.frames = {}
 	self:SetHeight(24)
-	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 3)) - 3) or self:GetHeight())
+	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 6)) - 3) or self:GetHeight())
 	self:SetPoint('BOTTOM', 0, 90)
 
 	self:CreateFrames()
