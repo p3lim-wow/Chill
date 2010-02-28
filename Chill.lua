@@ -1,6 +1,6 @@
 --[[
 
-	Copyright (c) 2009 Adrian L Lange <adrianlund@gmail.com>
+	Copyright (c) 2009-2010 Adrian L Lange <adrianlund@gmail.com>
 	All rights reserved.
 
 	You're allowed to use this addon, free of monetary charge,
