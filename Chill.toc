@@ -5,4 +5,7 @@
 ## Notes: Simple Cooldown timer
 ## SavedVariablesPerCharacter: ChillDB
 
+## LoadManagers: AddonLoader
+## X-LoadOn-Always: delayed
+
 Chill.lua

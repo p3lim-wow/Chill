@@ -9,7 +9,8 @@
 
 --]]
 
-local addon = CreateFrame('Frame', 'Chill', UIParent)
+local addonName = ...
+local addon = CreateFrame('Frame', addonName, UIParent)
 local backdrop = {
 	bgFile = [=[Interface\ChatFrame\ChatFrameBackground]=],
 	insets = {top = -1, bottom = -1, left = -1, right = -1}
@@ -157,7 +158,7 @@ end
 
 addon:RegisterEvent('ADDON_LOADED')
 addon:SetScript('OnEvent', function(self, event, name)
-	if(name ~= self:GetName()) then return end
+	if(name ~= addonName) then return end
 	ChillDB = ChillDB or {spell = {}, item = {}}
 
 	SLASH_Chill1 = '/chill'
