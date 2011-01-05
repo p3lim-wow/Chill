@@ -1,11 +1,8 @@
-## Interface: 30300
+## Interface: 40000
 ## Author: p3lim
 ## Version: Alpha
 ## Title: Chill
 ## Notes: Simple Cooldown timer
 ## SavedVariablesPerCharacter: ChillDB
-
-## LoadManagers: AddonLoader
-## X-LoadOn-Always: delayed
 
 Chill.lua

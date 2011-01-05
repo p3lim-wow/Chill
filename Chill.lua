@@ -10,172 +10,145 @@
 --]]
 
 local addonName = ...
-local addon = CreateFrame('Frame', addonName, UIParent)
-local backdrop = {
+
+local Chill = CreateFrame('Frame', nil, UIParent)
+
+local ACTIVE = {spell = {}, item = {}}
+local BUTTONS = {}
+local BACKDROP = {
 	bgFile = [=[Interface\ChatFrame\ChatFrameBackground]=],
 	insets = {top = -1, bottom = -1, left = -1, right = -1}
 }
 
-local function slashCommand(str)
-	local type, id, _ , name = string.match(str, '|H(%w+):(%w+)(.*)|h%[(.+)%]|h') -- todo: clean up
+local function SlashCommand(str)
+	local type, id = str:match('|H(%w+):(%d+)')
 
-	if(str and type) then
+	if(ChillDB[type]) then
 		id = tonumber(id)
 
 		if(not ChillDB[type][id]) then
-			ChillDB[type][id] = name
+			ChillDB[type][id] = true
 			print('|cffff8080Chill:|r Added', str, 'to the list')
 		else
 			ChillDB[type][id] = nil
 			print('|cffff8080Chill:|r Removed', str, 'from the list')
 		end
-
-		addon:CreateFrames()
 	else
-		print('|cffff8080Chill:|r Please link a spell/item to watch!')
+		print('|cffff8080Chill:|r Please link a spell or item to watch!')
 	end
 end
 
-local function onUpdate(frame, elapsed)
-	frame.duration = frame.duration - elapsed
+local function UpdatePositions()
+	local visible = 0
+	for index = 1, #BUTTONS do
+		local button = BUTTONS[index]
+		if(button:IsShown()) then
+			button:ClearAllPoints()
+			button:SetPoint('LEFT', visible * 30, 0)
+			Chill:SetWidth((visible + 1 * 30) - 6)
 
-	if(frame.duration <= 0) then
-		return addon:StopCooldown(frame, frame.name)
+			visible = visible + 1
+		end
+	end
+end
+
+local function UpdateCooldown(button, elapsed)
+	button.duration = button.duration - elapsed
+
+	if(button.duration < 0) then
+		button:Hide()
+		ACTIVE[button.type][button.id] = nil
+		return UpdatePositions()
 	end
 
-	if(frame.duration > 5 and frame.duration < 60) then
-		frame.text:SetFormattedText('%d', frame.duration)
-	elseif(frame.duration < 5) then
-		frame.text:SetFormattedText('|cffff0000%.1f|r', frame.duration)
+	if(button.duration > 5 and button.duration < 60) then
+		button.count:SetFormattedText('%d', button.duration)
+	elseif(button.duration < 5) then
+		button.count:SetFormattedText('|cffff0000%.1f|r', button.duration)
 	else
-		frame.text:SetText()
+		button.count:SetText()
 	end
 end
 
-function addon:CreateFrames()
-	for id in next, ChillDB.spell do
-		if(not self.frames['spell:'..id]) then
-			local frame = self:CreateCooldown()
-			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 6), 0)
-			frame.index = self.index
+local function CreateButton()
+	local button = CreateFrame('Frame', nil, Chill)
+	button:SetSize(24, 24)
+	button:SetBackdrop(BACKDROP)
+	button:SetBackdropColor(0, 0, 0)
+	button:SetScript('OnUpdate', UpdateCooldown)
 
-			self.frames['spell:'..id] = frame
-			self.index = self.index + 1
+	local icon = button:CreateTexture(nil, 'BORDER')
+	icon:SetAllPoints()
+	icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	button.icon = icon
+
+	local count = button:CreateFontString(nil, 'OVERLAY', 'NumberFontNormal') -- XXX: replace font
+	count:SetPoint('CENTER')
+	button.count = count
+
+	table.insert(BUTTONS, button)
+	return button
+end
+
+local function GetButton()
+	for index, button in pairs(BUTTONS) do
+		if(not button:IsShown()) then
+			return button
 		end
 	end
 
-	for id in next, ChillDB.item do
-		if(not self.frames['item:'..id]) then
-			local frame = self:CreateCooldown()
-			frame:SetPoint('BOTTOMLEFT', self, (self.index - 1) * (self:GetHeight() + 6), 0)
-			frame.index = self.index
+	return CreateButton()
+end
 
-			self.frames['item:'..id] = frame
-			self.index = self.index + 1
-		end
+local function UpdateButton(type, id, start, duration, texture)
+	if(not ACTIVE[type][id]) then
+		local button = GetButton()
+		button.icon:SetTexture(texture)
+		button.duration = start - GetTime() + duration
+		button.type = type
+		button.id = id
+		button:Show()
+
+		ACTIVE[type][id] = true
+		UpdatePositions()
 	end
 end
 
-function addon:CreateCooldown()
-	local frame = CreateFrame('Frame', nil, self)
-	frame:SetBackdrop(backdrop)
-	frame:SetBackdropColor(0, 0, 0)
-	frame:SetHeight(self:GetHeight())
-	frame:SetWidth(self:GetHeight())
-	frame:SetScript('OnUpdate', onUpdate)
-	frame:Hide()
-
-	frame.icon = frame:CreateTexture(nil, 'ARTWORK')
-	frame.icon:SetAllPoints(frame)
-	frame.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-
-	frame.text = frame:CreateFontString(nil, 'OVERLAY', 'NumberFontNormal')
-	frame.text:SetPoint('CENTER')
-
-	return frame
-end
-
-function addon:StartCooldown(name, texture, start, duration)
-	local index, slot = 20
-	for id, frame in next, self.frames do
-		if(frame.name and frame.name == name) then
-			slot = nil
-			return
-		elseif(not frame.duration and frame.index < index) then
-			index, slot = frame.index, frame
-		end
-	end
-
-	slot.name = name
-	slot.duration = start - GetTime() + duration
-	slot.icon:SetTexture(texture)
-	slot:Show()
-
-	self.active = self.active + 1
-	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 6)) - 3) or self:GetHeight())
-end
-
-function addon:StopCooldown(old)
-	for id, frame in next, self.frames do
-		if((frame.index > old.index) and frame.duration) then
-			old.name, old.duration = frame.name, frame.duration
-			old.icon:SetTexture(frame.icon:GetTexture())
-			old = frame
-		end
-	end
-
-	self.active = self.active - 1
-	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 6)) - 3) or self:GetHeight())
-	old.name, old.duration = nil, nil
-	old:Hide()
-end
-
-function addon:SPELL_UPDATE_COOLDOWN()
-	for id, name in next, ChillDB.spell do
-		local start, duration, enabled = GetSpellCooldown(name)
-
-		if(enabled == 1 and duration > 1.5) then
-			self:StartCooldown(name, GetSpellTexture(name), start, duration)
-		elseif(enabled == 1) then
-			for id, frame in next, self.frames do
-				if(frame.name and frame.name == name) then
-					self:StopCooldown(frame)
-				end
-			end
-		end
-	end
-end
-
-function addon:BAG_UPDATE_COOLDOWN()
-	for id, name in next, ChillDB.item do
-		local start, duration, enabled = GetItemCooldown(id)
-
+function Chill:BAG_UPDATE_COOLDOWN()
+	for item in pairs(ChillDB.item) do
+		local start, duration, enabled = GetItemCooldown(item)
 		if(enabled == 1 and duration > 30) then
-			self:StartCooldown(name, GetItemIcon(id), start, duration)
+			UpdateButton('item', item, start, duration, GetItemIcon(item))
 		end
 	end
 end
 
-addon:RegisterEvent('ADDON_LOADED')
-addon:SetScript('OnEvent', function(self, event, name)
+function Chill:SPELL_UPDATE_COOLDOWN()
+	for spell in pairs(ChillDB.spell) do
+		local start, duration, enabled = GetSpellCooldown(spell)
+		if(enabled == 1 and duration > 1.5) then
+			local _, _, texture = GetSpellInfo(spell)
+			UpdateButton('spell', spell, start, duration, texture)
+		end
+	end
+end
+
+Chill:RegisterEvent('ADDON_LOADED')
+Chill:SetScript('OnEvent', function(self, event, name)
 	if(name ~= addonName) then return end
-	ChillDB = ChillDB or {spell = {}, item = {}}
+	ChillDB = ChillDB or ACTIVE
 
 	SLASH_Chill1 = '/chill'
-	SlashCmdList[name] = slashCommand
+	SlashCmdList[name] = SlashCommand
 
-	self.index = 1
-	self.active = 0
-	self.frames = {}
 	self:SetHeight(24)
-	self:SetWidth(self.active > 0 and ((self.active * (self:GetHeight() + 6)) - 3) or self:GetHeight())
 	self:SetPoint('BOTTOM', 0, 90)
 
-	self:CreateFrames()
 	self:BAG_UPDATE_COOLDOWN()
 	self:SPELL_UPDATE_COOLDOWN()
 	self:RegisterEvent('SPELL_UPDATE_COOLDOWN')
 	self:RegisterEvent('BAG_UPDATE_COOLDOWN')
+
 	self:UnregisterEvent(event)
-	self:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
+	self:SetScript('OnEvent', function(self, event, ...) self[event](self) end)
 end)
