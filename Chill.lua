@@ -101,16 +101,19 @@ local function GetButton()
 end
 
 local function UpdateButton(type, id, start, duration, texture)
-	if(not ACTIVE[type][id]) then
-		local button = GetButton()
+	local button = ACTIVE[type][id]
+	if(not button) then
+		button = GetButton()
 		button.icon:SetTexture(texture)
 		button.duration = start - GetTime() + duration
 		button.type = type
 		button.id = id
 		button:Show()
 
-		ACTIVE[type][id] = true
+		ACTIVE[type][id] = button
 		UpdatePositions()
+	else
+		button.duration = start - GetTime() + duration
 	end
 end
 
