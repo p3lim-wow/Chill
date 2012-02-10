@@ -43,13 +43,15 @@ local function UpdatePositions()
 	for index = 1, #BUTTONS do
 		local button = BUTTONS[index]
 		if(button:IsShown()) then
+			local gap = visible > 0 and 6 or 0
 			button:ClearAllPoints()
-			button:SetPoint('LEFT', visible * 30, 0)
-			Chill:SetWidth((visible + 1 * 30) - 6)
+			button:SetPoint('LEFT', visible * (24 + gap), 0)
 
 			visible = visible + 1
 		end
 	end
+
+	Chill:SetWidth(visible * (24 + 6) - 6)
 end
 
 local function UpdateCooldown(button, elapsed)
