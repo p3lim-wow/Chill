@@ -132,8 +132,9 @@ function Chill:SPELL_UPDATE_COOLDOWN()
 	for spell in pairs(ChillDB.spell) do
 		local button = ACTIVE.spell[spell]
 		local start, duration, enabled = GetSpellCooldown(spell)
+
 		if((enabled == 1 and duration > 1.5) or (button and button.start ~= start)) then
-			local _, _, texture = GetSpellInfo(spell)
+			local __, __, texture = GetSpellInfo(spell)
 			UpdateButton('spell', spell, start, duration, texture)
 		end
 	end
